@@ -10,13 +10,16 @@ export default function DeploymentDetailPage() {
   const [deployment, setDeployment] = useState(null)
 
   const load = () => getDeployment(id).then(res => setDeployment(res.data))
+
   useEffect(() => {
     load()
-    const interval = setInterval(() => {
-      if (deployment && deployment.status === 'RUNNING') load()
-    }, 2000)
+  }, [id])
+
+  useEffect(() => {
+    if (!deployment || deployment.status !== 'RUNNING') return
+    const interval = setInterval(load, 2000)
     return () => clearInterval(interval)
-  }, [id, deployment?.status])
+  }, [deployment?.status])
 
   const handleStatusUpdate = async (status) => {
     await updateDeployStatus(id, status)

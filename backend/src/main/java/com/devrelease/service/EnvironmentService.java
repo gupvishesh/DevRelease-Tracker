@@ -6,6 +6,7 @@ import com.devrelease.enums.EnvironmentStatus;
 import com.devrelease.exception.ResourceNotFoundException;
 import com.devrelease.model.Environment;
 import com.devrelease.model.Project;
+import com.devrelease.repository.DeploymentRepository;
 import com.devrelease.repository.EnvironmentRepository;
 import com.devrelease.repository.ProjectRepository;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,13 @@ public class EnvironmentService {
 
     private final EnvironmentRepository environmentRepository;
     private final ProjectRepository projectRepository;
+    private final DeploymentRepository deploymentRepository;
 
-    public EnvironmentService(EnvironmentRepository environmentRepository, ProjectRepository projectRepository) {
+    public EnvironmentService(EnvironmentRepository environmentRepository, ProjectRepository projectRepository,
+                              DeploymentRepository deploymentRepository) {
         this.environmentRepository = environmentRepository;
         this.projectRepository = projectRepository;
+        this.deploymentRepository = deploymentRepository;
     }
 
     public EnvironmentResponse create(Long projectId, EnvironmentRequest request) {
@@ -58,6 +62,8 @@ public class EnvironmentService {
     }
 
     public void delete(Long id) {
+        // Delete associated deployments first to avoid FK constraint violation
+        deploymentRepository.deleteAll(deploymentRepository.findByEnvironmentId(id));
         environmentRepository.deleteById(id);
     }
 

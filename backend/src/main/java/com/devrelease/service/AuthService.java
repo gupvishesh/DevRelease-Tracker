@@ -37,7 +37,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use");
+            throw new UnauthorizedException("Email already in use");
         }
         User user = new User();
         user.setName(request.getName());

@@ -52,7 +52,7 @@ public class NotificationService {
     public void markAsRead(Long notificationId, String email) {
         Notification n = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
-        if (!n.getUser().getEmail().equals(email)) throw new RuntimeException("Forbidden");
+        if (!n.getUser().getEmail().equals(email)) throw new UnauthorizedException("Forbidden");
         n.setRead(true);
         notificationRepository.save(n);
     }
@@ -68,7 +68,7 @@ public class NotificationService {
     public void delete(Long notificationId, String email) {
         Notification n = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
-        if (!n.getUser().getEmail().equals(email)) throw new RuntimeException("Forbidden");
+        if (!n.getUser().getEmail().equals(email)) throw new UnauthorizedException("Forbidden");
         notificationRepository.delete(n);
     }
 

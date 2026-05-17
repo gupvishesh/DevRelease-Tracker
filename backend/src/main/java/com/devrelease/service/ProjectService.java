@@ -7,7 +7,11 @@ import com.devrelease.exception.ResourceNotFoundException;
 import com.devrelease.exception.UnauthorizedException;
 import com.devrelease.model.Project;
 import com.devrelease.model.User;
+import com.devrelease.repository.DeploymentRepository;
+import com.devrelease.repository.EnvironmentRepository;
+import com.devrelease.repository.NotificationRepository;
 import com.devrelease.repository.ProjectRepository;
+import com.devrelease.repository.ReleaseRepository;
 import com.devrelease.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +26,20 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final ReleaseRepository releaseRepository;
+    private final DeploymentRepository deploymentRepository;
+    private final EnvironmentRepository environmentRepository;
+    private final NotificationRepository notificationRepository;
 
-    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository,
+                          ReleaseRepository releaseRepository, DeploymentRepository deploymentRepository,
+                          EnvironmentRepository environmentRepository, NotificationRepository notificationRepository) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.releaseRepository = releaseRepository;
+        this.deploymentRepository = deploymentRepository;
+        this.environmentRepository = environmentRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     public ProjectResponse create(ProjectRequest request, String ownerEmail) {
@@ -72,6 +86,23 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
         assertOwnerOrAdmin(project, email);
+
+        // 1. Delete all deployments for every release in this project
+        List<Long> releaseIds = releaseRepository.findByProjectId(id)
+                .stream().map(r -> r.getId()).collect(Collectors.toList());
+        releaseIds.forEach(rid -> deploymentRepository.deleteAll(deploymentRepository.findByReleaseId(rid)));
+
+        // 2. Delete all deployments for every environment in this project
+        environmentRepository.findByProjectId(id)
+                .forEach(env -> deploymentRepository.deleteAll(deploymentRepository.findByEnvironmentId(env.getId())));
+
+        // 3. Delete all releases
+        releaseRepository.deleteAll(releaseRepository.findByProjectId(id));
+
+        // 4. Delete all environments
+        environmentRepository.deleteAll(environmentRepository.findByProjectId(id));
+
+        // 5. Delete the project (members join table cleaned up automatically by JPA)
         projectRepository.delete(project);
     }
 

@@ -11,6 +11,7 @@ import com.devrelease.model.Project;
 import com.devrelease.model.Release;
 import com.devrelease.model.User;
 import com.devrelease.repository.ProjectRepository;
+import com.devrelease.repository.DeploymentRepository;
 import com.devrelease.repository.ReleaseRepository;
 import com.devrelease.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -27,13 +28,16 @@ public class ReleaseService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final DeploymentRepository deploymentRepository;
 
     public ReleaseService(ReleaseRepository releaseRepository, ProjectRepository projectRepository,
-                          UserRepository userRepository, NotificationService notificationService) {
+                          UserRepository userRepository, NotificationService notificationService,
+                          DeploymentRepository deploymentRepository) {
         this.releaseRepository = releaseRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.deploymentRepository = deploymentRepository;
     }
 
     public ReleaseResponse create(Long projectId, ReleaseRequest request, String email) {
@@ -86,6 +90,8 @@ public class ReleaseService {
     public void delete(Long id, String email) {
         Release release = releaseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Release not found"));
+        // Delete associated deployments first to avoid FK constraint violation
+        deploymentRepository.deleteAll(deploymentRepository.findByReleaseId(id));
         releaseRepository.delete(release);
     }
 
