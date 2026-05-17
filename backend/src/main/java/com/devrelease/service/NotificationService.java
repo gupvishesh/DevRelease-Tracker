@@ -3,6 +3,7 @@ package com.devrelease.service;
 import com.devrelease.dto.response.NotificationResponse;
 import com.devrelease.enums.NotificationType;
 import com.devrelease.exception.ResourceNotFoundException;
+import com.devrelease.exception.UnauthorizedException;
 import com.devrelease.model.Notification;
 import com.devrelease.model.Project;
 import com.devrelease.model.User;
