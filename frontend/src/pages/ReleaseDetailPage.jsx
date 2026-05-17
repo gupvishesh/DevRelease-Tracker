@@ -48,9 +48,12 @@ export default function ReleaseDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (confirm('Delete this release?')) {
+    if (!confirm('Delete this release?')) return
+    try {
       await deleteRelease(projectId, releaseId)
       navigate(`/projects/${projectId}`)
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete release')
     }
   }
 

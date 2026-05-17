@@ -58,9 +58,12 @@ export default function ProjectDetailPage() {
   }
 
   const handleDeleteEnv = async (envId) => {
-    if (confirm('Delete this environment?')) {
+    if (!confirm('Delete this environment?')) return
+    try {
       await deleteEnvironment(id, envId)
       load()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete environment')
     }
   }
 
@@ -83,16 +86,22 @@ export default function ProjectDetailPage() {
   }
 
   const handleRemoveMember = async (userId) => {
-    if (confirm('Remove this member?')) {
+    if (!confirm('Remove this member?')) return
+    try {
       await removeMember(id, userId)
       load()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to remove member')
     }
   }
 
   const handleDelete = async () => {
-    if (confirm('Delete this project? This cannot be undone.')) {
+    if (!confirm('Delete this project? This cannot be undone.')) return
+    try {
       await deleteProject(id)
       navigate('/projects')
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete project')
     }
   }
 

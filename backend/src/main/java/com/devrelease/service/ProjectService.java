@@ -102,7 +102,11 @@ public class ProjectService {
         // 4. Delete all environments
         environmentRepository.deleteAll(environmentRepository.findByProjectId(id));
 
-        // 5. Delete the project (members join table cleaned up automatically by JPA)
+        // 5. Clear members join table so JPA can delete the project
+        project.getMembers().clear();
+        projectRepository.save(project);
+
+        // 6. Delete the project
         projectRepository.delete(project);
     }
 
